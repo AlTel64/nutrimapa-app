@@ -80,20 +80,22 @@ export default function Home() {
       </header>
 
       <section style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-        <input 
-          type="text" 
-          placeholder="Procure por pão sem glúten, kombucha, sem açúcar..." 
-          value={busca}
-          onChange={(e) => setBusca(e.target.value)}
-          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}
-        />
-        <button 
-          onClick={executarBusca}
-          style={{ padding: '12px 20px', background: '#2e7d32', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}
-        >
-          {carregando ? 'Buscando...' : 'Buscar'}
-        </button>
-      </section>
+  <input 
+    id="campo-busca"
+    name="busca"
+    type="text" 
+    placeholder="Procure por pão sem glúten, kombucha, sem açúcar..." 
+    value={busca}
+    onChange={(e) => setBusca(e.target.value)}
+    style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}
+  />
+  <button 
+    onClick={executarBusca}
+    style={{ padding: '12px 20px', background: '#2e7d32', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}
+  >
+    {carregando ? 'Buscando...' : 'Buscar'}
+  </button>
+</section>
 
       <section style={{ marginBottom: '20px' }}>
         {mounted ? (
