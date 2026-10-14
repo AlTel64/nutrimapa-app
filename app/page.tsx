@@ -75,7 +75,7 @@ export default function Home() {
   return (
     <main style={{ padding: '16px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
       <header style={{ textAlign: 'center', marginBottom: '16px' }}>
-        <h1 style={{ color: '#2e7d32', margin: '0 0 4px 0' }}>NutriMapa</h1>
+        <h1 style={{ color: '#2e7d32', margin: '0 0 16px 0' }}>NutriMapa</h1>
         <p style={{ color: '#666', margin: 0 }}>Radar de produtos saudáveis no Recreio</p>
       </header>
 
