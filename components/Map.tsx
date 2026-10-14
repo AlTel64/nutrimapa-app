@@ -55,7 +55,7 @@ export default function Map({ userLocation, itens }: MapProps) {
         />
         
         <Marker position={[userLocation.lat, userLocation.lng]} icon={icon}>
-          <Popup>Sua localização no Recreio</Popup>
+          <Popup>Sua localização</Popup>
         </Marker>
 
         {itens.map((item, idx) => (

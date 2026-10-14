@@ -27,7 +27,7 @@ const MapWithNoSSR = dynamic<MapProps>(
     ssr: false,
     loading: () => (
       <div style={{ height: '380px', width: '100%', background: '#e0e0e0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-        Carregando mapa do Recreio...
+        Carregando mapa ...
       </div>
     )
   }
