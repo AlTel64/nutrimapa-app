@@ -74,10 +74,37 @@ export default function Home() {
 
   return (
     <main style={{ padding: '16px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <header style={{ textAlign: 'center', marginBottom: '16px' }}>
-        <h1 style={{ color: '#2e7d32', margin: '0 0 8px 0' }}>NutriMapa</h1>
-        <p style={{ color: '#666', margin: 0 }}>Radar de produtos saudáveis no Recreio</p>
-      </header>
+      <header style={{ 
+  display: 'flex', 
+  flexDirection: 'column', 
+  alignItems: 'center', 
+  marginBottom: '20px' 
+}}>
+  <div style={{ 
+    display: 'flex', 
+    alignItems: 'center', 
+    gap: '12px', 
+    justifyContent: 'center' 
+  }}>
+    <img 
+      src="/logo.png" 
+      alt="NutriMapa Logo" 
+      style={{ height: '48px', width: 'auto', objectFit: 'contain' }} 
+    />
+    <h1 style={{ 
+      color: '#2e7d32', 
+      margin: 0, 
+      fontSize: '32px', 
+      fontWeight: '800',
+      fontFamily: 'var(--font-nunito), sans-serif'
+    }}>
+      NutriMapa
+    </h1>
+  </div>
+  <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: '14px' }}>
+    Radar de produtos saudáveis no Recreio
+  </p>
+</header>
 
       <section style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
   <input 
