@@ -102,7 +102,7 @@ export default function Home() {
     </h1>
   </div>
   <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: '14px' }}>
-    Radar de produtos saudáveis no Recreio
+    Radar de produtos saudáveis perto de você
   </p>
 </header>
 
