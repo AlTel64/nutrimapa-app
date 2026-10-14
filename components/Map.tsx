@@ -65,20 +65,20 @@ export default function Map({ userLocation, itens }: MapProps) {
             icon={icon}
           >
             <Popup>
-              <strong>{item.estabelecimento_nome}</strong><br />
-              {item.produto_nome} (R$ {item.preco.toFixed(2)})<br />
-              <small>{item.endereco} ({item.distancia_km.toFixed(1)} km)</small><br />
-              {item.whatsapp && (
-                <a 
-                  href={`https://wa.me/55${item.whatsapp}?text=Olá! Vi o produto ${item.produto_nome} no NutriMapa.`}
-                  target="_blank" 
-                  rel="noreferrer"
-                  style={{ color: '#25D366', fontWeight: 'bold' }}
-                >
-                  Contato via WhatsApp
-                </a>
-              )}
-            </Popup>
+  <strong>{item.estabelecimento_nome}</strong><br />
+  {item.produto_nome} {item.preco ? `(R$ ${item.preco.toFixed(2)})` : '(Preço sob consulta)'}<br />
+  <small>{item.endereco} ({item.distancia_km.toFixed(1)} km)</small><br />
+  {item.whatsapp && (
+    <a 
+      href={`https://wa.me/55${item.whatsapp}?text=Olá! Vi o produto ${item.produto_nome} no NutriMapa.`}
+      target="_blank" 
+      rel="noreferrer"
+      style={{ color: '#25D366', fontWeight: 'bold' }}
+    >
+      Contato via WhatsApp
+    </a>
+  )}
+</Popup>
           </Marker>
         ))}
       </MapContainer>

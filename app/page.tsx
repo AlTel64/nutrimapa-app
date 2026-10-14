@@ -181,7 +181,9 @@ export default function Home() {
             style={{ border: '1px solid #e0e0e0', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}
           >
             <h3 style={{ margin: '0 0 4px 0' }}>{item.produto_nome}</h3>
-            <p style={{ margin: '0 0 4px 0', color: '#2e7d32', fontWeight: 'bold' }}>R$ {item.preco.toFixed(2)}</p>
+            <p style={{ margin: '0 0 4px 0', color: '#2e7d32', fontWeight: 'bold' }}>
+  {item.preco ? `R$ ${item.preco.toFixed(2)}` : 'Preço sob consulta'}
+</p>
             <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
               {item.estabelecimento_nome} (Endereço: {item.endereco}) (Distância: {item.distancia_km.toFixed(1)} km)
             </p>
