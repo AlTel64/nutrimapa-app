@@ -27,7 +27,7 @@ const MapWithNoSSR = dynamic<MapProps>(
     ssr: false,
     loading: () => (
       <div style={{ height: '380px', width: '100%', background: '#e0e0e0', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
-        Carregando mapa ...
+        Carregando mapa...
       </div>
     )
   }
@@ -39,6 +39,7 @@ export default function Home() {
   const [busca, setBusca] = useState('');
   const [resultados, setResultados] = useState<ItemResultado[]>([]);
   const [carregando, setCarregando] = useState(false);
+  const [avisoGps, setAvisoGps] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -49,9 +50,15 @@ export default function Home() {
             lat: pos.coords.latitude,
             lng: pos.coords.longitude
           });
+          setAvisoGps(false);
         },
-        () => console.log('Utilizando coordenadas centrais do Recreio dos Bandeirantes.')
+        (error) => {
+          console.log('Permissão de geolocalização negada ou indisponível:', error.message);
+          setAvisoGps(true);
+        }
       );
+    } else {
+      setAvisoGps(true);
     }
   }, []);
 
@@ -75,54 +82,86 @@ export default function Home() {
   return (
     <main style={{ padding: '16px', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
       <header style={{ 
-  display: 'flex', 
-  flexDirection: 'column', 
-  alignItems: 'center', 
-  marginBottom: '20px' 
-}}>
-  <div style={{ 
-    display: 'flex', 
-    alignItems: 'center', 
-    gap: '12px', 
-    justifyContent: 'center' 
-  }}>
-    <img 
-      src="/logo.png" 
-      alt="NutriMapa Logo" 
-      style={{ height: '48px', width: 'auto', objectFit: 'contain' }} 
-    />
-    <h1 style={{ 
-      color: '#2e7d32', 
-      margin: 0, 
-      fontSize: '32px', 
-      fontWeight: '800',
-      fontFamily: 'var(--font-nunito), sans-serif'
-    }}>
-      NutriMapa
-    </h1>
-  </div>
-  <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: '14px' }}>
-    Radar de produtos saudáveis perto de você
-  </p>
-</header>
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        marginBottom: '20px' 
+      }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '12px', 
+          justifyContent: 'center' 
+        }}>
+          <img 
+            src="/logo.png" 
+            alt="NutriMapa Logo" 
+            style={{ height: '48px', width: 'auto', objectFit: 'contain' }} 
+          />
+          <h1 style={{ 
+            color: '#2e7d32', 
+            margin: 0, 
+            fontSize: '32px', 
+            fontWeight: '800',
+            fontFamily: 'var(--font-nunito), sans-serif'
+          }}>
+            NutriMapa
+          </h1>
+        </div>
+        <p style={{ color: '#666', margin: '4px 0 0 0', fontSize: '14px' }}>
+          Radar de produtos saudáveis perto de você
+        </p>
+      </header>
+
+      {avisoGps && (
+        <div style={{
+          background: '#fff3cd',
+          color: '#856404',
+          border: '1px solid #ffeeba',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '16px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: '14px'
+        }}>
+          <span>
+            <strong>Localização não ativada:</strong> Exibindo resultados com base na região padrão. Permita o acesso à localização no seu navegador para ver os produtos mais próximos de você.
+          </span>
+          <button 
+            onClick={() => setAvisoGps(false)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              fontWeight: 'bold',
+              color: '#856404',
+              cursor: 'pointer',
+              marginLeft: '12px'
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       <section style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-  <input 
-    id="campo-busca"
-    name="busca"
-    type="text" 
-    placeholder="Procure por pão sem glúten, kombucha, sem açúcar..." 
-    value={busca}
-    onChange={(e) => setBusca(e.target.value)}
-    style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}
-  />
-  <button 
-    onClick={executarBusca}
-    style={{ padding: '12px 20px', background: '#2e7d32', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}
-  >
-    {carregando ? 'Buscando...' : 'Buscar'}
-  </button>
-</section>
+        <input 
+          id="campo-busca"
+          name="busca"
+          type="text" 
+          placeholder="Procure por pão sem glúten, kombucha, sem açúcar..." 
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}
+        />
+        <button 
+          onClick={executarBusca}
+          style={{ padding: '12px 20px', background: '#2e7d32', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}
+        >
+          {carregando ? 'Buscando...' : 'Buscar'}
+        </button>
+      </section>
 
       <section style={{ marginBottom: '20px' }}>
         {mounted ? (
@@ -135,7 +174,7 @@ export default function Home() {
       </section>
 
       <section>
-        <h2>Produtos no Bairro ({resultados.length})</h2>
+        <h2>Produtos Encontrados ({resultados.length})</h2>
         {resultados.map((item, idx) => (
           <div 
             key={`${item.produto_nome}-${item.estabelecimento_nome}-${idx}`} 
