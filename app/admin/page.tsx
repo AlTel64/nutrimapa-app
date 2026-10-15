@@ -19,6 +19,7 @@ export default function AdminPage() {
   const [lojaIdCriada, setLojaIdCriada] = useState<string | null>(null);
   const [produtoNome, setProdutoNome] = useState('');
   const [categoria, setCategoria] = useState('Sem Glúten');
+  const [outraCategoria, setOutraCategoria] = useState('');
   const [preco, setPreco] = useState('');
   const [mensagem, setMensagem] = useState('');
   const [carregando, setCarregando] = useState(false);
@@ -91,11 +92,19 @@ export default function AdminPage() {
     if (!lojaIdCriada) return;
 
     setCarregando(true);
+
+    const categoriaFinal = categoria === 'Outra' ? outraCategoria.trim() : categoria;
+
+    if (!categoriaFinal) {
+      setMensagem('Por favor, informe uma categoria válida.');
+      setCarregando(false);
+      return;
+    }
     
     // 1. Inserir produto na tabela central
     const { data: prodData, error: prodError } = await supabase
       .from('produtos')
-      .insert([{ nome: produtoNome, categoria: categoria }])
+      .insert([{ nome: produtoNome, categoria: categoriaFinal }])
       .select();
 
     if (prodError) {
@@ -122,9 +131,12 @@ export default function AdminPage() {
     if (estqError) {
       setMensagem('Erro ao vincular estoque: ' + estqError.message);
     } else {
-      setMensagem(`Produto "${produtoNome}" adicionado com sucesso!`);
+      setMensagem(`Produto "${produtoNome}" (${categoriaFinal}) adicionado com sucesso!`);
       setProdutoNome('');
       setPreco('');
+      if (categoria === 'Outra') {
+        setOutraCategoria('');
+      }
     }
     setCarregando(false);
   };
@@ -238,9 +250,22 @@ export default function AdminPage() {
               <option value="Sem Lactose">Sem Lactose</option>
               <option value="Sem Açúcar">Sem Açúcar</option>
               <option value="Vegano">Vegano</option>
+              <option value="Orgânico">Orgânico</option>
               <option value="Bebidas">Bebidas</option>
               <option value="Proteico">Proteico</option>
+              <option value="Outra">+ Nova Categoria (digitar)...</option>
             </select>
+
+            {categoria === 'Outra' && (
+              <input 
+                type="text" 
+                placeholder="Digite a nova categoria (ex: Orgânicos, Keto, Low Carb)" 
+                value={outraCategoria} 
+                onChange={(e) => setOutraCategoria(e.target.value)} 
+                required
+                style={{ padding: '10px', borderRadius: '6px', border: '1px solid #2e7d32', background: '#f0f8f0' }}
+              />
+            )}
 
             <input 
               type="text" 
