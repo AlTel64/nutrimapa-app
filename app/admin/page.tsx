@@ -24,9 +24,9 @@ export default function AdminPage() {
   const [carregando, setCarregando] = useState(false);
 
   // Validação simples de senha de acesso
-  const verificarPin = (e: React.FormEvent) => {
+  const verificarPin = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (pin === '2026') { // Altere este PIN para a senha desejada
+    if (pin === '2026') {
       setAutenticado(true);
     } else {
       alert('Senha/PIN incorreto.');
@@ -54,7 +54,7 @@ export default function AdminPage() {
   };
 
   // Cadastrar Estabelecimento
-  const salvarLoja = async (e: React.FormEvent) => {
+  const salvarLoja = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!latitude || !longitude) {
       alert('Capture a posição via GPS antes de salvar a loja.');
@@ -86,13 +86,13 @@ export default function AdminPage() {
   };
 
   // Cadastrar Produto e Vincular ao Estoque da Loja
-  const adicionarProduto = async (e: React.FormEvent) => {
+  const adicionarProduto = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!lojaIdCriada) return;
 
     setCarregando(true);
     
-    // 1. Inserir ou buscar produto na tabela central
+    // 1. Inserir produto na tabela central
     const { data: prodData, error: prodError } = await supabase
       .from('produtos')
       .insert([{ nome: produtoNome, categoria: categoria }])
@@ -152,7 +152,7 @@ export default function AdminPage() {
 
   return (
     <main style={{ padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <header style={{ marginBottom: '20px', borderBottom: '1px solid #eee', pb: '12px' }}>
+      <header style={{ marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '12px' }}>
         <h1 style={{ color: '#2e7d32', margin: 0 }}>Painel de Campo NutriMapa</h1>
         <p style={{ color: '#666', margin: '4px 0 0 0' }}>Cadastro presencial de lojas e estoque</p>
       </header>
@@ -163,7 +163,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      {/* ETAPA 1: CADASTRO DA LOJA */}
       {!lojaIdCriada ? (
         <section style={{ background: '#f9f9f9', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
           <h2>1. Dados do Estabelecimento</h2>
@@ -218,7 +217,6 @@ export default function AdminPage() {
           </form>
         </section>
       ) : (
-        /* ETAPA 2: ADIÇÃO DE PRODUTOS PARA A LOJA CADASTRADA */
         <section style={{ background: '#f9f9f9', padding: '16px', borderRadius: '8px' }}>
           <h2>2. Adicionar Produtos ({nomeLoja})</h2>
           <form onSubmit={adicionarProduto} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
