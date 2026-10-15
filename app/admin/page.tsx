@@ -40,6 +40,12 @@ export default function AdminPage() {
   // Estoque da Loja Selecionada
   const [itensEstoque, setItensEstoque] = useState<ItemEstoque[]>([]);
 
+  // Edição de Produto Existente
+  const [itemEditandoId, setItemEditandoId] = useState<string | null>(null);
+  const [editNome, setEditNome] = useState('');
+  const [editCategoria, setEditCategoria] = useState('');
+  const [editPreco, setEditPreco] = useState('');
+
   // Novo Produto
   const [produtoNome, setProdutoNome] = useState('');
   const [categoria, setCategoria] = useState('Sem Glúten');
@@ -71,6 +77,7 @@ export default function AdminPage() {
   const selecionarLoja = async (id: string) => {
     setLojaSelecionadaId(id);
     setMensagem('');
+    setItemEditandoId(null);
 
     if (id === 'NOVA') {
       setNomeLoja('');
@@ -165,7 +172,6 @@ export default function AdminPage() {
     setCarregando(true);
 
     if (lojaSelecionadaId === 'NOVA') {
-      // Criação
       const { data, error } = await supabase
         .from('estabelecimentos')
         .insert([{ nome: nomeLoja, endereco, whatsapp, latitude, longitude, ativo: true }])
@@ -180,7 +186,6 @@ export default function AdminPage() {
         setLojaSelecionadaId(novaId);
       }
     } else {
-      // Atualização
       const { error } = await supabase
         .from('estabelecimentos')
         .update({ nome: nomeLoja, endereco, whatsapp, latitude, longitude })
@@ -213,7 +218,6 @@ export default function AdminPage() {
       return;
     }
 
-    // 1. Cadastrar produto na tabela geral
     const { data: prodData, error: prodError } = await supabase
       .from('produtos')
       .insert([{ nome: produtoNome, categoria: categoriaFinal }])
@@ -228,7 +232,6 @@ export default function AdminPage() {
     const produtoId = prodData[0].id;
     const precoNum = preco ? parseFloat(preco.replace(',', '.')) : null;
 
-    // 2. Vincular produto ao estoque da loja
     const { error: estqError } = await supabase
       .from('estoque_loja')
       .insert([{ estabelecimento_id: lojaSelecionadaId, produto_id: produtoId, preco: precoNum, disponivel: true }]);
@@ -240,6 +243,47 @@ export default function AdminPage() {
       setProdutoNome('');
       setPreco('');
       if (categoria === 'Outra') setOutraCategoria('');
+      carregarEstoqueLoja(lojaSelecionadaId);
+    }
+    setCarregando(false);
+  };
+
+  // Abrir modo de edição para um item do estoque
+  const iniciarEdicao = (item: ItemEstoque) => {
+    setItemEditandoId(item.estoque_id);
+    setEditNome(item.produto_nome);
+    setEditCategoria(item.categoria);
+    setEditPreco(item.preco !== null ? item.preco.toString() : '');
+  };
+
+  // Salvar alterações de um produto existente
+  const salvarEdicaoItem = async (item: ItemEstoque) => {
+    setCarregando(true);
+
+    // 1. Atualiza nome e categoria no cadastro central de produtos
+    const { error: prodError } = await supabase
+      .from('produtos')
+      .update({ nome: editNome, categoria: editCategoria })
+      .eq('id', item.produto_id);
+
+    if (prodError) {
+      setMensagem('Erro ao atualizar produto: ' + prodError.message);
+      setCarregando(false);
+      return;
+    }
+
+    // 2. Atualiza o preço na relação de estoque da loja
+    const precoNum = editPreco ? parseFloat(editPreco.replace(',', '.')) : null;
+    const { error: estqError } = await supabase
+      .from('estoque_loja')
+      .update({ preco: precoNum })
+      .eq('id', item.estoque_id);
+
+    if (estqError) {
+      setMensagem('Erro ao atualizar preço: ' + estqError.message);
+    } else {
+      setMensagem(`Item "${editNome}" atualizado com sucesso!`);
+      setItemEditandoId(null);
       carregarEstoqueLoja(lojaSelecionadaId);
     }
     setCarregando(false);
@@ -389,54 +433,115 @@ export default function AdminPage() {
               <div 
                 key={item.estoque_id}
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
                   background: '#fff',
-                  padding: '10px 12px',
+                  padding: '12px',
                   borderRadius: '6px',
-                  marginBottom: '8px',
+                  marginBottom: '10px',
                   border: '1px solid #e0e0e0'
                 }}
               >
-                <div>
-                  <strong>{item.produto_nome}</strong>
-                  <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>({item.categoria})</span>
-                  <br />
-                  <span style={{ fontSize: '13px', color: '#2e7d32', fontWeight: 'bold' }}>
-                    {item.preco ? `R$ ${item.preco.toFixed(2)}` : 'Preço sob consulta'}
-                  </span>
-                </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button 
-                    onClick={() => alternarDisponibilidade(item)}
-                    style={{
-                      padding: '6px 10px',
-                      fontSize: '12px',
-                      borderRadius: '4px',
-                      border: 'none',
-                      background: item.disponivel ? '#c8e6c9' : '#ffcdd2',
-                      color: item.disponivel ? '#2e7d32' : '#c62828',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {item.disponivel ? 'Disponível' : 'Esgotado'}
-                  </button>
-                  <button 
-                    onClick={() => removerItemEstoque(item.estoque_id)}
-                    style={{
-                      padding: '6px 10px',
-                      fontSize: '12px',
-                      borderRadius: '4px',
-                      border: 'none',
-                      background: '#ffebee',
-                      color: '#d32f2f',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Remover
-                  </button>
-                </div>
+                {itemEditandoId === item.estoque_id ? (
+                  /* FORMULÁRIO DE EDIÇÃO DO ITEM */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Nome do Produto:</label>
+                    <input 
+                      type="text" 
+                      value={editNome} 
+                      onChange={(e) => setEditNome(e.target.value)} 
+                      style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                    />
+                    
+                    <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Categoria:</label>
+                    <input 
+                      type="text" 
+                      value={editCategoria} 
+                      onChange={(e) => setEditCategoria(e.target.value)} 
+                      style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                    />
+
+                    <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Preço R$ (opcional):</label>
+                    <input 
+                      type="text" 
+                      value={editPreco} 
+                      onChange={(e) => setEditPreco(e.target.value)} 
+                      placeholder="Sob consulta se vazio"
+                      style={{ padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                    />
+
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                      <button 
+                        onClick={() => salvarEdicaoItem(item)}
+                        disabled={carregando}
+                        style={{ flex: 1, padding: '8px', background: '#2e7d32', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}
+                      >
+                        Salvar
+                      </button>
+                      <button 
+                        onClick={() => setItemEditandoId(null)}
+                        style={{ padding: '8px 16px', background: '#666', color: '#fff', border: 'none', borderRadius: '4px' }}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* EXIBIÇÃO PADRÃO COM BOTOES DE AÇÃO */
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong>{item.produto_nome}</strong>
+                      <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>({item.categoria})</span>
+                      <br />
+                      <span style={{ fontSize: '13px', color: '#2e7d32', fontWeight: 'bold' }}>
+                        {item.preco ? `R$ ${item.preco.toFixed(2)}` : 'Preço sob consulta'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <button 
+                        onClick={() => iniciarEdicao(item)}
+                        style={{
+                          padding: '6px 10px',
+                          fontSize: '12px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          background: '#e3f2fd',
+                          color: '#1565c0',
+                          cursor: 'pointer',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button 
+                        onClick={() => alternarDisponibilidade(item)}
+                        style={{
+                          padding: '6px 10px',
+                          fontSize: '12px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          background: item.disponivel ? '#c8e6c9' : '#ffcdd2',
+                          color: item.disponivel ? '#2e7d32' : '#c62828',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {item.disponivel ? 'Disponível' : 'Esgotado'}
+                      </button>
+                      <button 
+                        onClick={() => removerItemEstoque(item.estoque_id)}
+                        style={{
+                          padding: '6px 10px',
+                          fontSize: '12px',
+                          borderRadius: '4px',
+                          border: 'none',
+                          background: '#ffebee',
+                          color: '#d32f2f',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
