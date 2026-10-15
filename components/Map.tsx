@@ -8,7 +8,7 @@ import L from 'leaflet';
 interface ItemResultado {
   produto_nome: string;
   categoria: string;
-  preco: number;
+  preco: number | null;
   estabelecimento_nome: string;
   endereco: string;
   whatsapp: string;
@@ -55,7 +55,7 @@ export default function Map({ userLocation, itens }: MapProps) {
         />
         
         <Marker position={[userLocation.lat, userLocation.lng]} icon={icon}>
-          <Popup>Sua localização</Popup>
+          <Popup>Sua localização aproximada</Popup>
         </Marker>
 
         {itens.map((item, idx) => (
@@ -65,20 +65,30 @@ export default function Map({ userLocation, itens }: MapProps) {
             icon={icon}
           >
             <Popup>
-  <strong>{item.estabelecimento_nome}</strong><br />
-  {item.produto_nome} {item.preco ? `(R$ ${item.preco.toFixed(2)})` : '(Preço sob consulta)'}<br />
-  <small>{item.endereco} ({item.distancia_km.toFixed(1)} km)</small><br />
-  {item.whatsapp && (
-    <a 
-      href={`https://wa.me/55${item.whatsapp}?text=Olá! Vi o produto ${item.produto_nome} no NutriMapa.`}
-      target="_blank" 
-      rel="noreferrer"
-      style={{ color: '#25D366', fontWeight: 'bold' }}
-    >
-      Contato via WhatsApp
-    </a>
-  )}
-</Popup>
+              <strong>{item.estabelecimento_nome}</strong><br />
+              {item.produto_nome} {item.preco ? `(R$ ${item.preco.toFixed(2)})` : '(Preço sob consulta)'}<br />
+              <small>{item.endereco} ({item.distancia_km.toFixed(1)} km)</small><br />
+              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {item.whatsapp && (
+                  <a 
+                    href={`https://wa.me/55${item.whatsapp}?text=Olá! Vi o produto ${item.produto_nome} no NutriMapa.`}
+                    target="_blank" 
+                    rel="noreferrer"
+                    style={{ color: '#25D366', fontWeight: 'bold', textDecoration: 'none' }}
+                  >
+                    WhatsApp da Loja
+                  </a>
+                )}
+                <a 
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  style={{ color: '#1976D2', fontWeight: 'bold', textDecoration: 'none' }}
+                >
+                  Como Chegar (Rota)
+                </a>
+              </div>
+            </Popup>
           </Marker>
         ))}
       </MapContainer>

@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabaseClient';
 interface ItemResultado {
   produto_nome: string;
   categoria: string;
-  preco: number;
+  preco: number | null;
   estabelecimento_nome: string;
   endereco: string;
   whatsapp: string;
@@ -178,15 +178,35 @@ export default function Home() {
         {resultados.map((item, idx) => (
           <div 
             key={`${item.produto_nome}-${item.estabelecimento_nome}-${idx}`} 
-            style={{ border: '1px solid #e0e0e0', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}
+            style={{ border: '1px solid #e0e0e0', padding: '12px', borderRadius: '8px', marginBottom: '12px', background: '#fff' }}
           >
             <h3 style={{ margin: '0 0 4px 0' }}>{item.produto_nome}</h3>
             <p style={{ margin: '0 0 4px 0', color: '#2e7d32', fontWeight: 'bold' }}>
-  {item.preco ? `R$ ${item.preco.toFixed(2)}` : 'Preço sob consulta'}
-</p>
-            <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-              {item.estabelecimento_nome} (Endereço: {item.endereco}) (Distância: {item.distancia_km.toFixed(1)} km)
+              {item.preco ? `R$ ${item.preco.toFixed(2)}` : 'Preço sob consulta'}
             </p>
+            <p style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#666' }}>
+              <strong>{item.estabelecimento_nome}</strong> &bull; {item.endereco} ({item.distancia_km.toFixed(1)} km)
+            </p>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginTop: '8px', fontSize: '14px' }}>
+              {item.whatsapp && (
+                <a 
+                  href={`https://wa.me/55${item.whatsapp}?text=Olá! Vi o produto ${item.produto_nome} no NutriMapa.`}
+                  target="_blank" 
+                  rel="noreferrer"
+                  style={{ color: '#25D366', fontWeight: 'bold', textDecoration: 'none' }}
+                >
+                  WhatsApp da Loja
+                </a>
+              )}
+              <a 
+                href={`https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}`}
+                target="_blank" 
+                rel="noreferrer"
+                style={{ color: '#1976D2', fontWeight: 'bold', textDecoration: 'none' }}
+              >
+                Como Chegar (Rota)
+              </a>
+            </div>
           </div>
         ))}
       </section>
