@@ -201,6 +201,68 @@ export default function AdminPage() {
     setCarregando(false);
   };
 
+  // Excluir estabelecimento completo e limpar produtos orfãos
+  const removerLojaCompleta = async () => {
+    if (lojaSelecionadaId === 'NOVA') return;
+
+    const confirmacao = confirm(
+      `Tem certeza que deseja excluir permanentemente a loja "${nomeLoja}" e todos os vínculos de produtos do seu estoque?`
+    );
+
+    if (!confirmacao) return;
+
+    setCarregando(true);
+
+    // 1. Obter todos os produto_ids vinculados a esta loja
+    const { data: estoqueAtual } = await supabase
+      .from('estoque_loja')
+      .select('produto_id')
+      .eq('estabelecimento_id', lojaSelecionadaId);
+
+    const produtoIds = estoqueAtual ? estoqueAtual.map((e) => e.produto_id) : [];
+
+    // 2. Remover o estoque da loja
+    const { error: estqError } = await supabase
+      .from('estoque_loja')
+      .delete()
+      .eq('estabelecimento_id', lojaSelecionadaId);
+
+    if (estqError) {
+      setMensagem('Erro ao remover estoque da loja: ' + estqError.message);
+      setCarregando(false);
+      return;
+    }
+
+    // 3. Remover a loja
+    const { error: lojaError } = await supabase
+      .from('estabelecimentos')
+      .delete()
+      .eq('id', lojaSelecionadaId);
+
+    if (lojaError) {
+      setMensagem('Erro ao excluir estabelecimento: ' + lojaError.message);
+      setCarregando(false);
+      return;
+    }
+
+    // 4. Limpar produtos orfãos que não estão em nenhuma outra loja
+    for (const prodId of produtoIds) {
+      const { data: outrosEstoques } = await supabase
+        .from('estoque_loja')
+        .select('id')
+        .eq('produto_id', prodId);
+
+      if (!outrosEstoques || outrosEstoques.length === 0) {
+        await supabase.from('produtos').delete().eq('id', prodId);
+      }
+    }
+
+    setMensagem(`Estabelecimento "${nomeLoja}" e estoque removidos com sucesso!`);
+    await carregarLojas();
+    selecionarLoja('NOVA');
+    setCarregando(false);
+  };
+
   // Adicionar novo produto ao estoque da loja
   const adicionarProduto = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -260,7 +322,6 @@ export default function AdminPage() {
   const salvarEdicaoItem = async (item: ItemEstoque) => {
     setCarregando(true);
 
-    // 1. Atualiza nome e categoria no cadastro central de produtos
     const { error: prodError } = await supabase
       .from('produtos')
       .update({ nome: editNome, categoria: editCategoria })
@@ -272,7 +333,6 @@ export default function AdminPage() {
       return;
     }
 
-    // 2. Atualiza o preço na relação de estoque da loja
     const precoNum = editPreco ? parseFloat(editPreco.replace(',', '.')) : null;
     const { error: estqError } = await supabase
       .from('estoque_loja')
@@ -420,6 +480,28 @@ export default function AdminPage() {
             {carregando ? 'Salvando...' : lojaSelecionadaId === 'NOVA' ? 'Salvar Nova Loja' : 'Atualizar Dados da Loja'}
           </button>
         </form>
+
+        {lojaSelecionadaId !== 'NOVA' && (
+          <div style={{ marginTop: '16px', borderTop: '1px solid #e0e0e0', paddingTop: '16px' }}>
+            <button 
+              type="button"
+              onClick={removerLojaCompleta}
+              disabled={carregando}
+              style={{
+                width: '100%',
+                padding: '12px',
+                background: '#d32f2f',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer'
+              }}
+            >
+              🗑 Excluir Estabelecimento e Limpar Estoque
+            </button>
+          </div>
+        )}
       </section>
 
       {/* ETAPA 2: ESTOQUE E NOVOS PRODUTOS */}
@@ -441,7 +523,6 @@ export default function AdminPage() {
                 }}
               >
                 {itemEditandoId === item.estoque_id ? (
-                  /* FORMULÁRIO DE EDIÇÃO DO ITEM */
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Nome do Produto:</label>
                     <input 
@@ -485,7 +566,6 @@ export default function AdminPage() {
                     </div>
                   </div>
                 ) : (
-                  /* EXIBIÇÃO PADRÃO COM BOTOES DE AÇÃO */
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <strong>{item.produto_nome}</strong>
