@@ -1,93 +1,62 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
-interface ItemResultado {
-  produto_nome: string;
-  categoria: string;
-  preco: number | null;
-  estabelecimento_nome: string;
-  endereco: string;
-  whatsapp: string;
-  latitude: number;
-  longitude: number;
-  distancia_km: number;
+// Correção dos ícones padrão do Leaflet no Next.js
+const defaultIcon = L.icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = defaultIcon;
+
+export interface LocalMapa {
+  nome: string;
+  produto: string;
+  lat: number;
+  lng: number;
+  nota?: number;
 }
 
-interface MapProps {
-  userLocation: { lat: number; lng: number };
-  itens: ItemResultado[];
+export interface MapProps {
+  userLat: number;
+  userLng: number;
+  locais: LocalMapa[];
 }
 
-export default function Map({ userLocation, itens }: MapProps) {
-  const [icon, setIcon] = useState<L.Icon | null>(null);
-
-  useEffect(() => {
-    const customIcon = new L.Icon({
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-    });
-    setIcon(customIcon);
-  }, []);
-
-  if (!icon) {
-    return (
-      <div style={{ height: '380px', width: '100%', background: '#f5f5f5', borderRadius: '12px' }} />
-    );
-  }
-
+export default function Map({ userLat, userLng, locais }: MapProps) {
   return (
-    <div style={{ height: '380px', width: '100%', borderRadius: '12px', overflow: 'hidden' }}>
-      <MapContainer 
-        center={[userLocation.lat, userLocation.lng]} 
-        zoom={14} 
+    <div style={{ height: '280px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid #ccc' }}>
+      <MapContainer
+        center={[userLat, userLng]}
+        zoom={14}
+        scrollWheelZoom={false}
         style={{ height: '100%', width: '100%' }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        
-        <Marker position={[userLocation.lat, userLocation.lng]} icon={icon}>
-          <Popup>Sua localização aproximada</Popup>
+
+        {/* Marcador do Usuário */}
+        <Marker position={[userLat, userLng]}>
+          <Popup>📍 Sua localização aproximada</Popup>
         </Marker>
 
-        {itens.map((item, idx) => (
-          <Marker 
-            key={`${item.estabelecimento_nome}-${idx}`} 
-            position={[item.latitude, item.longitude]} 
-            icon={icon}
-          >
+        {/* Marcadores dos Estabelecimentos */}
+        {locais.map((local, idx) => (
+          <Marker key={idx} position={[local.lat, local.lng]}>
             <Popup>
-              <strong>{item.estabelecimento_nome}</strong><br />
-              {item.produto_nome} {item.preco ? `(R$ ${item.preco.toFixed(2)})` : '(Preço sob consulta)'}<br />
-              <small>{item.endereco} ({item.distancia_km.toFixed(1)} km)</small><br />
-              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {item.whatsapp && (
-                  <a 
-                    href={`https://wa.me/55${item.whatsapp}?text=Olá! Vi o produto ${item.produto_nome} no NutriMapa.`}
-                    target="_blank" 
-                    rel="noreferrer"
-                    style={{ color: '#25D366', fontWeight: 'bold', textDecoration: 'none' }}
-                  >
-                    WhatsApp da Loja
-                  </a>
-                )}
-                <a 
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${item.latitude},${item.longitude}`}
-                  target="_blank" 
-                  rel="noreferrer"
-                  style={{ color: '#1976D2', fontWeight: 'bold', textDecoration: 'none' }}
-                >
-                  Como Chegar (Rota)
-                </a>
-              </div>
+              <strong>{local.nome}</strong><br />
+              {local.produto}<br />
+              {local.nota && local.nota > 0 ? `★ ${local.nota.toFixed(1)}` : '★ Novo'}
             </Popup>
           </Marker>
         ))}
