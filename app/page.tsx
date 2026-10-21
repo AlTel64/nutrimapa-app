@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabaseClient';
 
-// Carregamento dinâmico do componente de Mapa para evitar erros de renderização no servidor (SSR)
-const MapaDinamico = dynamic(() => import('@/components/Mapa'), {
+// Carregamento dinâmico apontando para o arquivo originalcomponents/Map.tsx
+const MapaDinamico = dynamic(() => import('@/components/Map'), {
   ssr: false,
   loading: () => (
     <div style={{ height: '280px', width: '100%', background: '#f5f5f5', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666', fontSize: '14px' }}>
